@@ -1,7 +1,6 @@
 import re
-from src.zone import Zone, ZoneType
-from src.connection import Connection
-from src.graph import Graph
+from src.obj import Zone, ZoneType, Connection
+from src.obj import Graph
 
 
 class Parser:

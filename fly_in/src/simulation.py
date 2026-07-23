@@ -1,7 +1,6 @@
-from src.drone import Drone
-from src.graph import Graph
+from src.obj import Zone, ZoneType, Drone, Graph
 from src.pathfinding import Pathfinder
-from src.zone import Zone, ZoneType
+
 
 
 class SimulationDeadlockError(Exception):

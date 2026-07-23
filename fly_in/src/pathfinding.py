@@ -1,5 +1,4 @@
-from src.zone import Zone, ZoneType
-from src.graph import Graph
+from src.obj import Zone, ZoneType, Graph
 
 
 class Pathfinder:

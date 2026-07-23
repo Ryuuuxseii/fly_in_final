@@ -7,7 +7,7 @@ PYTEST		= $(VENV)/bin/pytest
 FLAKE8		= $(VENV)/bin/flake8
 MYPY		= $(VENV)/bin/mypy
 
-MAP			?= maps/easy/01_linear_path.txt
+MAP			?= maps/challenger/01_the_impossible_dream.txt
  
 all: install
 

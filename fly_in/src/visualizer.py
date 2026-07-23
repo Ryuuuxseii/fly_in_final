@@ -2,9 +2,7 @@ import pygame
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from colorama import Fore, Style, init
-from src.graph import Graph
-from src.zone import ZoneType
-from src.drone import Drone
+from src.obj import Graph, ZoneType, Drone
 
 init(autoreset=True)
 
