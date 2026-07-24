@@ -91,6 +91,7 @@ class Parser:
 
     def _parse_zone(self, line: str, lineno: int) -> Zone:
         """Parse a hub/start_hub/end_hub line and return a Zone object."""
+
         pattern = r"^(start_hub|end_hub|hub):\s+(\S+)\s+(-?\d+)\s+(-?\d+)"
         match = re.match(pattern, line)
         if not match:

@@ -1,21 +1,20 @@
 from src.obj import Zone, ZoneType, Drone, Graph
-from src.pathfinding import Pathfinder
+from src.pathfinding import finder
 
 
-
-class SimulationDeadlockError(Exception):
+class SImulationfail(Exception):
     """
-    Custom exception raised when simulation enters an unrecoverable deadlock.
+    raised when simulation is unsolvable.
     """
     pass
 
 
 class Simulation:
-    """Manages the drone routing simulation turn by turn synchronously."""
+    """graph and output manager responsible for simulation"""
 
     def __init__(self, graph: Graph) -> None:
         self.graph = graph
-        self.pathfinder = Pathfinder(graph)
+        self.finder = finder(graph)
         self.drones: list[Drone] = []
         self.turn_log: list[str] = []
         self._initialize_drones()
@@ -27,7 +26,7 @@ class Simulation:
 
         target_max_paths = 2 if self.graph.nb_drones >= 25 else 4
 
-        all_paths = self.pathfinder.find_all_paths_dijkstra_penalty(
+        all_paths = self.finder.find_all_paths_dijkstra_penalty(
             self.graph.start, self.graph.end, max_paths=target_max_paths
         )
 
@@ -53,7 +52,7 @@ class Simulation:
             else:
                 stall_turns += 1
                 if stall_turns >= MAX_STALL_TURNS:
-                    raise SimulationDeadlockError(
+                    raise SImulationfail(
                         f"Simulation deadlock detected: no drone moved "
                         f"for {MAX_STALL_TURNS} consecutive turns."
                     )
