@@ -1,7 +1,7 @@
 from src.obj import Zone, ZoneType, Graph
 
 
-class finder:
+class Pathfinder:
     """Finds shortest paths in a Graph using Dijkstra's algorithm."""
 
     def __init__(self, graph: Graph) -> None:

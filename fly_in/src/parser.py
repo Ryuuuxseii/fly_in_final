@@ -1,219 +1,226 @@
-import re
-from src.obj import Zone, ZoneType, Connection
+from src.obj import Zone, ZoneType, Connection, Drone
 from src.obj import Graph
 
 
+class Map:
+
+    """
+    Mandatory Map class containing map info such as number of drones,
+    zones and their cnncts.
+    """
+
+    def __init__(self, nb_drones: int = 0,
+                 cnncts: list[Connection] = None,
+                 zones: dict = None, drones: list[Drone] = None):
+        self.nb_drones: int = nb_drones
+        self.cnncts: list[Connection] = cnncts if cnncts is not None else [
+        ]
+        self.zones: dict = zones if zones is not None else {}
+        self.drones: list[Drone] = drones if drones is not None else []
+
+    def add_connection(self, link: Connection):
+        self.cnncts.append(link)
+
+
 class Parser:
-    """Parses the input map file and builds a Graph object."""
-    def parse_file(self, filepath: str) -> Graph:
-        """Parse a map file and return a populated Graph."""
-        graph = Graph()
+    """
+    Parses the input map file and builds a Graph object
+    """
+
+    def __init__(self) -> None:
+        self.current_line = 0
+
+    def error(self, msg: str) -> None:
+        raise ValueError(f"{msg} on line {self.current_line} \u274c")
+
+    # -----------------------------------
+    def get_metadata(self, line: str) -> tuple[str, str | None]:
+        if "[" in line:
+            base, _, content = line.rpartition("[")
+            content = content.strip("]")
+            return base, content
+        return line, None
+
+    # -----------------------------------
+    def hub_parser(self, line: str) -> tuple[str, Zone]:
         try:
-            with open(filepath, "r") as f:
-                lines = f.readlines()
-        except FileNotFoundError:
-            raise FileNotFoundError(f"Map file not found: {filepath}")
+            hub_type, info = line.split(":", 1)
+        except ValueError:
+            self.error(f"Invalid hub format, missing ':' in '{line}'")
 
-        for i, line in enumerate(lines, start=1):
-            line = line.strip()
-            if not line or line.startswith("#"):
-                continue
-            self._parse_line(line, i, graph)
+        metadata: list[str] = []
+        info, tags = self.get_metadata(info)
+        if tags:
+            tags = self._normalize_zone_tags(tags)
+            metadata = tags.split()
 
-        self._validate_graph(graph)
-        return graph
+        name_x_y = info.split()
 
-    def _parse_line(self, line: str, lineno: int, graph: Graph) -> None:
-        """Parse a single line and update the graph accordingly."""
-        if graph.nb_drones == 0 and not line.startswith("nb_drones:"):
-            raise SyntaxError(
-                f"Line {lineno}: the first active line must define "
-                "'nb_drones:'"
-            )
-        if line.startswith("nb_drones:"):
-            if graph.nb_drones != 0:
-                raise SyntaxError(
-                    f"Line {lineno}: 'nb_drones' must exclusively be "
-                    "defined once at the top"
-                )
-            graph.nb_drones = self._parse_nb_drones(line, lineno)
-        elif line.startswith("start_hub:"):
-            if graph.start is not None:
-                raise SyntaxError(
-                    f"Line {lineno}: multiple start_hub definitions found"
-                )
-            zone = self._parse_zone(line, lineno)
-            try:
-                graph.add_zone(zone)
-            except ValueError:
-                raise SyntaxError(
-                    f"Line {lineno}: duplicate zone name -> '{zone.name}'"
-                )
-            graph.start = zone
-        elif line.startswith("end_hub:"):
-            if graph.end is not None:
-                raise SyntaxError(
-                    f"Line {lineno}: multiple end_hub definitions found"
-                )
-            zone = self._parse_zone(line, lineno)
-            try:
-                graph.add_zone(zone)
-            except ValueError:
-                raise SyntaxError(
-                    f"Line {lineno}: duplicate zone name -> '{zone.name}'"
-                )
-            graph.end = zone
-        elif line.startswith("hub:"):
-            zone = self._parse_zone(line, lineno)
-            try:
-                graph.add_zone(zone)
-            except ValueError:
-                raise SyntaxError(
-                    f"Line {lineno}: duplicate zone name -> '{zone.name}'"
-                )
-        elif line.startswith("connection:"):
-            graph.add_connection(self._parse_connection(line, lineno, graph))
-        else:
-            raise SyntaxError(f"Line {lineno}: unknown prefix -> '{line}'")
+        if len(name_x_y) > 3:
+            self.error(f"Too many values given in '{line}'")
 
-    def _parse_nb_drones(self, line: str, lineno: int) -> int:
-        """Parse the nb_drones line and return the number of drones."""
-        parts = line.split(":")
         try:
-            value = int(parts[1].strip())
-            if value <= 0:
-                raise ValueError
-            return value
-        except (IndexError, ValueError):
-            raise SyntaxError(
-                f"Line {lineno}: invalid nb_drones value -> '{line}'"
-            )
-
-    def _parse_zone(self, line: str, lineno: int) -> Zone:
-        """Parse a hub/start_hub/end_hub line and return a Zone object."""
-
-        pattern = r"^(start_hub|end_hub|hub):\s+(\S+)\s+(-?\d+)\s+(-?\d+)"
-        match = re.match(pattern, line)
-        if not match:
-            raise SyntaxError(
-                f"Line {lineno}: invalid zone definition -> '{line}'"
-            )
-
-        name = match.group(2)
-        x = int(match.group(3))
-        y = int(match.group(4))
-
-        meta_match = re.search(r"\[(.+)\]", line)
-        end_pos = meta_match.start() if meta_match else len(line)
-        rest = line[match.end():end_pos]
-        if rest.strip():
-            raise SyntaxError(
-                f"Line {lineno}: invalid zone definition -> '{line}'"
-            )
+            name = name_x_y[0]
+            x = int(name_x_y[1])
+            y = int(name_x_y[2])
+        except IndexError:
+            self.error(f"Missing name, x, or y in '{line}'")
+        except (ValueError, TypeError):
+            self.error(f"x and y must be integers in '{line}'")
 
         if "-" in name:
-            raise SyntaxError(
-                f"Line {lineno}: zone name cannot contain dashes -> '{name}'"
-            )
+            self.error(f"zone name cannot contain dashes -> '{name}'")
 
-        metadata = self._parse_metadata(line, lineno)
-        zone_type = self._parse_zone_type(metadata.get("zone", "normal"),
-                                          lineno)
-        color = metadata.get("color", "none")
-        max_drones = self._parse_capacity(
-            metadata.get("max_drones", "1"), lineno
-        )
+        zone_type = ZoneType.NORMAL
+        color = "none"
+        max_drones = 1
 
-        return Zone(name, x, y, zone_type, color, max_drones)
+        for i in metadata:
+            try:
+                key, value = i.split("=")
+            except ValueError:
+                self.error(f"Metadata tag '{i}' must "
+                           "follow 'key=value' format")
 
-    def _parse_connection(
-        self, line: str, lineno: int, graph: Graph
-    ) -> Connection:
-        """Parse a connection line and return a Connection object."""
-        pattern = r"^connection:\s+(\S+)-(\S+)"
-        match = re.match(pattern, line)
-        if not match:
-            raise SyntaxError(
-                f"Line {lineno}: invalid connection definition -> '{line}'"
-            )
+            if key == "color":
+                color = value
+            elif key == "max_drones":
+                try:
+                    max_drones = int(value)
+                except ValueError:
+                    self.error("'max_drones' must be an integer, "
+                               f"got '{value}'")
+                if max_drones <= 0:
+                    self.error(f"'max_drones' must be positive, got '{value}'")
+            elif key == "zone":
+                valid_types = [z.value for z in ZoneType]
+                if value not in valid_types:
+                    self.error(f"Invalid zone type '{value}', must be one of "
+                               f"{valid_types} (line {line})")
+                zone_type = ZoneType(value)
+            else:
+                self.error(f"Unknown metadata key: '{key}'")
 
-        name_a = match.group(1)
-        name_b = match.group(2)
+        zone = Zone(name, x, y, zone_type, color, max_drones)
+        return hub_type, zone
 
-        zone_a = graph.get_zone(name_a)
-        zone_b = graph.get_zone(name_b)
+    @staticmethod
+    def _normalize_zone_tags(tags: str) -> str:
+        """Accept the legacy 'zone restricted' (space) shorthand alongside
+        the standard 'zone=restricted' form, by rewriting it before the
+        tags string gets split into individual key=value tokens."""
+        for zt in ZoneType:
+            tags = tags.replace(f"zone {zt.value}", f"zone={zt.value}")
+        return tags
 
-        if zone_a is None:
-            raise SyntaxError(
-                f"Line {lineno}: unknown zone '{name_a}'"
-            )
-        if zone_b is None:
-            raise SyntaxError(
-                f"Line {lineno}: unknown zone '{name_b}'"
-            )
+    # -----------------------------------
+    def connect_parse(self, line: str, graph: "Graph") -> None:
+        try:
+            _, content = line.split(":", 1)
+        except ValueError:
+            self.error(f"Invalid connection format, missing ':' in '{line}'")
+
+        clean_text, tags = self.get_metadata(content)
+
+        if "-" not in clean_text:
+            self.error("Connections need a '-' between zone names in"
+                       f"'{line}'")
+
+        try:
+            n1, n2 = clean_text.split("-")
+            n1, n2 = n1.strip(), n2.strip()
+        except ValueError:
+            self.error(f"Invalid connection format in '{line}'")
+
+        zone_a = graph.get_zone(n1)
+        zone_b = graph.get_zone(n2)
+
+        if zone_a is None or zone_b is None:
+            missing = n1 if zone_a is None else n2
+            self.error(f"Zone '{missing}' does not exist")
 
         if graph.get_connection(zone_a, zone_b) is not None:
-            raise SyntaxError(
-                f"Line {lineno}: duplicate connection "
-                f"'{name_a}-{name_b}'"
-            )
+            self.error(f"Duplicate connection between '{n1}' and '{n2}'")
 
-        metadata = self._parse_metadata(line, lineno)
-        max_link_capacity = self._parse_capacity(
-            metadata.get("max_link_capacity", "1"), lineno
-        )
-        return Connection(zone_a, zone_b, max_link_capacity)
+        tags_dict = dict(t.split("=") for t in tags.split()) if tags else {}
 
-    def _parse_metadata(self, line: str, lineno: int) -> dict[str, str]:
-        """Extract metadata from brackets and return as a dictionary."""
-        metadata: dict[str, str] = {}
-        match = re.search(r"\[(.+)\]", line)
-
-        if not match:
-            return metadata
-
-        content = match.group(1).strip()
-        content = re.sub(r"zone\s+restricted", "zone=restricted", content)
-        content = re.sub(r"zone\s+priority", "zone=priority", content)
-        content = re.sub(r"zone\s+normal", "zone=normal", content)
-        content = re.sub(r"zone\s+blocked", "zone=blocked", content)
-
-        for pair in content.split():
-            if "=" not in pair:
-                raise SyntaxError(
-                    f"Line {lineno}: invalid metadata format -> '{pair}'"
-                )
-            key, value = pair.split("=", 1)
-            metadata[key.strip()] = value.strip()
-        return metadata
-
-    def _parse_zone_type(self, value: str, lineno: int) -> ZoneType:
-        """Parse and validate a zone type string."""
         try:
-            return ZoneType(value)
+            max_link = int(tags_dict.get("max_link_capacity", 1))
         except ValueError:
-            raise SyntaxError(
-                f"Line {lineno}: invalid zone type '{value}'"
-            )
+            self.error(f"'max_link_capacity' must be an integer in '{line}'")
+        if max_link <= 0:
+            self.error(f"'max_link_capacity' must be positive in '{line}'")
 
-    def _parse_capacity(self, value: str, lineno: int) -> int:
-        """Parse and validate a capacity value."""
+        connection = Connection(zone_a, zone_b, max_link)
+        graph.add_connection(connection)
+
+    # -----------------------------------
+    def parse_file(self, the_file: str) -> "Graph":
+        graph = Graph()
+        seen_nb_drones = False
+
         try:
-            capacity = int(value)
-            if capacity <= 0:
-                raise ValueError
-            return capacity
-        except ValueError:
-            raise SyntaxError(
-                f"Line {lineno}: capacity must be a positive integer "
-                f"and greater than zero -> '{value}'"
-            )
+            with open(the_file, "r") as f:
+                lines = f.readlines()
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Map file not found: {the_file}")
 
-    def _validate_graph(self, graph: Graph) -> None:
-        """Validate that the graph has all required components."""
+        first_active_line = True
+        for raw_line in lines:
+            self.current_line += 1
+            line = raw_line.strip()
+
+            if not line or line.startswith("#"):
+                continue
+
+            if first_active_line:
+                first_active_line = False
+                if not line.startswith("nb_drones:"):
+                    self.error(
+                        "the first active line must define 'nb_drones:'"
+                    )
+
+            if line.startswith("nb_drones:"):
+                if seen_nb_drones:
+                    self.error(
+                        "'nb_drones' must exclusively be defined once "
+                        "at the top"
+                    )
+                try:
+                    graph.nb_drones = int(line.split(":")[1].strip())
+                except (IndexError, ValueError):
+                    self.error("'nb_drones' must be an integer")
+                if graph.nb_drones <= 0:
+                    self.error("'nb_drones' must be positive")
+                seen_nb_drones = True
+
+            elif "hub:" in line:
+                hub_type, zone = self.hub_parser(line)
+                if graph.get_zone(zone.name) is not None:
+                    self.error(f"Duplicate zone name '{zone.name}'")
+
+                if hub_type == "start_hub":
+                    if graph.start is not None:
+                        self.error("multiple start_hub definitions found")
+                    graph.start = zone
+                elif hub_type == "end_hub":
+                    if graph.end is not None:
+                        self.error("multiple end_hub definitions found")
+                    graph.end = zone
+
+                graph.add_zone(zone)
+
+            elif line.startswith("connection:"):
+                self.connect_parse(line, graph)
+
+            else:
+                self.error(f"unknown prefix -> '{line}'")
+
         if graph.nb_drones == 0:
-            raise SyntaxError("Missing nb_drones definition")
+            self.error("Missing 'nb_drones' definition in file")
         if graph.start is None:
-            raise SyntaxError("Missing start_hub definition")
+            self.error("Missing 'start_hub' definition in file")
         if graph.end is None:
-            raise SyntaxError("Missing end_hub definition")
+            self.error("Missing 'end_hub' definition in file")
+
+        return graph

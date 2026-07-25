@@ -6,13 +6,6 @@ from src.obj import Graph, ZoneType, Drone
 
 init(autoreset=True)
 
-ZONE_TYPE_COLORS: dict[ZoneType, str] = {
-    ZoneType.NORMAL: "skyblue",
-    ZoneType.PRIORITY: "blue",
-    ZoneType.RESTRICTED: "red",
-    ZoneType.BLOCKED: "gray",
-}
-
 ZONE_COLORS: dict[str, str] = {
     "green": "\033[32m",
     "blue": "\033[34m",
@@ -39,6 +32,13 @@ ZONE_COLORS: dict[str, str] = {
     "none": "\033[37m",
 }
 
+ZONE_TYPE_COLORS: dict[ZoneType, str] = {
+    ZoneType.NORMAL: "skyblue",
+    ZoneType.PRIORITY: "blue",
+    ZoneType.RESTRICTED: "red",
+    ZoneType.BLOCKED: "gray",
+}
+
 
 class Visualizer:
     """Handles visual representation of the simulation."""
@@ -51,6 +51,7 @@ class Visualizer:
         print(f"{Style.RESET_ALL}", end="")
         parts = moves.split()
         colored_parts = []
+        print(f"\033[1mturn {_turn}: \033[22m", end="")
         for part in parts:
             drone_id, zone_name = part.split("-", 1)
 
@@ -82,7 +83,7 @@ class Visualizer:
             f"{Fore.YELLOW}{total_drones}{Style.RESET_ALL}"
         )
 
-    def graph_draw(self, filepath: str = "") -> None:
+    def draw_graph(self, filepath: str = "") -> None:
         """Draw the graph using matplotlib."""
         fig, ax = plt.subplots(figsize=(15, 9))
         fig.patch.set_facecolor("#F3F3F3")
@@ -131,18 +132,18 @@ class Visualizer:
             "none": "#6464C8",
         }
 
-        for cnc in self.graph.cncs:
+        for connection in self.graph.connections:
             ax.plot(
-                [cnc.zone_a.x, cnc.zone_b.x],
-                [cnc.zone_a.y, cnc.zone_b.y],
+                [connection.zone_a.x, connection.zone_b.x],
+                [connection.zone_a.y, connection.zone_b.y],
                 color="#969696", linewidth=1.5, zorder=1
             )
-            if cnc.max_link_capacity > 1:
-                mid_x = (cnc.zone_a.x + cnc.zone_b.x) / 2
-                mid_y = (cnc.zone_a.y + cnc.zone_b.y) / 2
+            if connection.max_link_capacity > 1:
+                mid_x = (connection.zone_a.x + connection.zone_b.x) / 2
+                mid_y = (connection.zone_a.y + connection.zone_b.y) / 2
                 ax.text(
                     mid_x, mid_y + 0.02,
-                    f"cap:{cnc.max_link_capacity}",
+                    f"cap:{connection.max_link_capacity}",
                     fontsize=7, ha="center", color="#820DFF"
                 )
 
@@ -360,7 +361,7 @@ class Visualizer:
             title_surf = font_title.render(title_text, True, (200, 200, 200))
             screen.blit(title_surf, (20, 15))
 
-            for conn in self.graph.cncs:
+            for conn in self.graph.connections:
                 p1 = to_screen(conn.zone_a.x, conn.zone_a.y)
                 p2 = to_screen(conn.zone_b.x, conn.zone_b.y)
                 pygame.draw.line(screen, (150, 150, 150), p1, p2, 2)

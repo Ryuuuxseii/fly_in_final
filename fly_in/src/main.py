@@ -1,7 +1,7 @@
 import sys
 import traceback
 from src.parser import Parser
-from src.simulation import Simulation, SimulationDeadlockError
+from src.simulation import Simulation, Simfail
 from src.visualizer import Visualizer
 
 
@@ -36,7 +36,7 @@ def main() -> None:
             visualizer.animate(simulation.drones, turn_log, filepath)
 
     except (FileNotFoundError, SyntaxError, ValueError,
-            SimulationDeadlockError) as e:
+            Simfail) as e:
         print(f"Error: {e}")
         sys.exit(1)
     except Exception as e:

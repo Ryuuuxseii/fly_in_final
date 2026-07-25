@@ -7,7 +7,7 @@ PYTEST		= $(VENV)/bin/pytest
 FLAKE8		= $(VENV)/bin/flake8
 MYPY		= $(VENV)/bin/mypy
 
-MAP			?= maps/challenger/01_the_impossible_dream.txt
+MAP			?= maps/easy/03_basic_capacity.txt
  
 all: install
 
@@ -41,59 +41,30 @@ debug: $(VENV)/bin/python3
 	PYTHONPATH=. $(VENV)/bin/python3 -m pdb $(MAIN) $(MAP)
 
 clean:
-	@echo ">>> Cleaning temporary files..."
 	find . -type d -name "__pycache__"   -exec rm -rf {} + 2>/dev/null || true
 	find . -type d -name ".mypy_cache"   -exec rm -rf {} + 2>/dev/null || true
 	find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
 	find . -type f -name "*.pyc"         -delete 2>/dev/null || true
 	find . -type f -name "*.pyo"         -delete 2>/dev/null || true
-	@echo ">>> Clean complete."
+	@echo "--->> Clean complete."
  
 fclean: clean
-	@echo ">>> Removing virtual environment..."
+	@echo "--->> Removing virtual environment..."
 	rm -rf $(VENV)
-	@echo ">>> Full clean complete."
 
 lint: $(VENV)/bin/python3
-	@echo ">>> Running flake8..."
 	$(FLAKE8) .
-	@echo ">>> Running mypy..."
 	$(MYPY) . \
 		--warn-return-any \
 		--warn-unused-ignores \
 		--ignore-missing-imports \
 		--disallow-untyped-defs \
 		--check-untyped-defs
-	@echo ">>> Lint complete."
+	@echo "--->> Lint complete."
  
 lint-strict: $(VENV)/bin/python3
-	@echo ">>> Running flake8 (strict)..."
 	$(FLAKE8) .
-	@echo ">>> Running mypy (strict)..."
 	$(MYPY) . --strict
-	@echo ">>> Strict lint complete."
 
-help:
-	@echo ""
-	@echo "  Fly-in — Drone Routing Simulation"
-	@echo ""
-	@echo "  Targets:"
-	@echo "    install      Install project dependencies into a virtual environment"
-	@echo "    run          Run the simulation (pass MAP=<map_file> for a specific map)"
-	@echo "    animate      Run the simulation with animation (pass MAP=<map_file> for a specific map)"
-	@echo "    debug        Run the simulation with Python's pdb debugger"
-	@echo "    clean        Remove __pycache__, .mypy_cache, .pytest_cache, *.pyc, *.pyo"
-	@echo "    fclean       clean + remove the virtual environment"
-	@echo "    lint         Run flake8 + mypy with mandatory flags"
-	@echo "    lint-strict  Run flake8 + mypy with --strict"
-	@echo ""
-	@echo "  Example:"
-	@echo "    make run MAP=maps/easy/01_linear_path.txt"
-	@echo "    make animate MAP=maps/easy/01_linear_path.txt"
-	@echo ""
-	@echo "  Virtual Environment:"
-	@echo "    To activate the virtual environment, run:"
-	@echo "        source $(VENV)/bin/activate"
-	@echo ""
 
 .PHONY: all install run animate debug clean fclean lint lint-strict help
