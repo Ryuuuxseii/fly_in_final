@@ -9,13 +9,12 @@ class Pathfinder:
 
     def _path_weight(self, zone: Zone, penalties: dict[str, float]) -> float:
         """
-        Return the pathfinding weight for a zone, including dynamic penalties.
-
-        Priority zones cost 1 turn (same as normal zones) but are preferred
-        when two routes tie: the tiebreaker in zone selection gives priority
-        zones a lower sort key so Dijkstra expands them first.
-        Penalties are added dynamically to force alternative route exploration.
+        Returns the cost of entering a zone plus whatever penalty
+        has accumulated on that zone from previous path computations.
+        This penalty is the trick that produces multiple distinct paths
+        instead of Dijkstra always returning the same shortest one!
         """
+
         weights: dict[ZoneType, float] = {
             ZoneType.PRIORITY: 1.0,
             ZoneType.NORMAL: 1.0,
@@ -30,6 +29,7 @@ class Pathfinder:
         """
         Find the shortest path from start to end using Dijkstra with penalties.
         """
+
         distances: dict[str, float] = {
             zone.name: float("inf") for zone in self.graph.zones
         }

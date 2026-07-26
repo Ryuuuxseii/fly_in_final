@@ -20,9 +20,9 @@ class Simulation:
         self._init_drones()
 
     def _init_drones(self) -> None:
-        """Create all drones and assign paths using multiple routes."""
+        """Create all drones and assign them paths using multiple routes."""
         if self.graph.start is None or self.graph.end is None:
-            raise ValueError("Graph must have a start and end zone")
+            raise ValueError("Graph must have a start and end zone ❌")
 
         target_max_paths = 2 if self.graph.nb_drones >= 25 else 4
 

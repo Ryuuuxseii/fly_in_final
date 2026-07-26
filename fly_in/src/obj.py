@@ -21,7 +21,7 @@ class ZoneType(Enum):
 
 
 class Zone:
-    """Represents a zone (node) in the drone routing network."""
+    """Represents a zone (or node) in the graph"""
 
     def __init__(
         self,
@@ -32,16 +32,16 @@ class Zone:
         color: str = "none",
         max_drones: int = 1,
     ) -> None:
-        self.name = name
         self.x = x
         self.y = y
-        self.zone_type = zone_type
+        self.name = name
         self.color = color
         self.max_drones = max_drones
+        self.zone_type = zone_type
 
 
 class Connection:
-    """Represents a bidirectional connection (edge) between two zones."""
+    """Represents a connection (or edge) between two zones"""
 
     def __init__(
         self,
@@ -64,8 +64,25 @@ class Connection:
         return self.zone_a
 
 
+class Drone:
+    """Represents a drone in the simulation."""
+
+    def __init__(self, drone_id: int, start: Zone) -> None:
+        self.drone_id = drone_id
+        self.current_zone: Zone = start  # default
+        self.path: list[Zone] = []  # list of zones remaining for visit
+        self.delivered: bool = False  # reached goal or no
+        self.in_transit: bool = False  # VVV these 3 only for restricted
+        self.transit_connection: Connection | None = None
+        self.transit_destination: Zone | None = None
+
+    def __str__(self) -> str:
+        """Return the drone identifier string."""
+        return f"D{self.drone_id}"
+
+
 class Graph:
-    """Represents the network of zones and connections."""
+    """Represents the network of zones and connections as a whole"""
 
     def __init__(self) -> None:
         self.zones: list[Zone] = []
@@ -75,7 +92,8 @@ class Graph:
         self.nb_drones: int = 0
 
     def add_zone(self, zone: Zone) -> None:
-        """Add a zone to the graph."""
+        """Add a zone to our graph"""
+
         if self.get_zone(zone.name) is not None:
             raise ValueError(
                 f"Duplicate zone name: '{zone.name}'"
@@ -83,18 +101,21 @@ class Graph:
         self.zones.append(zone)
 
     def add_connection(self, connection: Connection) -> None:
-        """Add a connection to the graph."""
+        """Add a connection to our graph."""
+
         self.connections.append(connection)
 
     def get_zone(self, name: str) -> Zone | None:
         """Return a zone by name, or None if not found."""
+
         for zone in self.zones:
             if zone.name == name:
                 return zone
         return None
 
     def get_neighbors(self, zone: Zone) -> list[Zone]:
-        """Return all zones directly connected to the given zone."""
+        """Return a list of all the given zone's neighbours"""
+
         neighbors: list[Zone] = []
         for connection in self.connections:
             if connection.connects(zone):
@@ -104,25 +125,9 @@ class Graph:
         return neighbors
 
     def get_connection(self, zone_a: Zone, zone_b: Zone) -> Connection | None:
-        """Return the connection between two zones, or None if not found."""
+        """Return waypoint between zones (None if there arent any)"""
+
         for connection in self.connections:
             if connection.connects(zone_a) and connection.connects(zone_b):
                 return connection
         return None
-
-
-class Drone:
-    """Represents a drone in the simulation."""
-
-    def __init__(self, drone_id: int, start: Zone) -> None:
-        self.drone_id = drone_id
-        self.current_zone: Zone = start
-        self.path: list[Zone] = []
-        self.delivered: bool = False
-        self.in_transit: bool = False
-        self.transit_connection: Connection | None = None
-        self.transit_destination: Zone | None = None
-
-    def __str__(self) -> str:
-        """Return the drone identifier string."""
-        return f"D{self.drone_id}"
