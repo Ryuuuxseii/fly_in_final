@@ -72,7 +72,7 @@ class Drone:
         self.current_zone: Zone = start  # default
         self.path: list[Zone] = []  # list of zones remaining for visit
         self.delivered: bool = False  # reached goal or no
-        self.in_transit: bool = False  # VVV these 3 only for restricted
+        self.moving_connection: bool = False  # VVV these 3 only for restricted
         self.transit_connection: Connection | None = None
         self.transit_destination: Zone | None = None
 

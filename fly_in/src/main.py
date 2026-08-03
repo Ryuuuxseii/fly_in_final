@@ -7,30 +7,23 @@ from src.visualizer import Visualizer
 
 def main() -> None:
     """Entry point for the Fly-in drone routing simulation."""
-    if len(sys.argv) < 2 or len(sys.argv) > 3:
-        print("Usage: python3 src/main.py <map_file> [--static|--animate]")
+    if len(sys.argv) != 2:
+        print("Usage: python3 src/main.py <map_file>")
         sys.exit(1)
 
     filepath = sys.argv[1]
-    mode = sys.argv[2] if len(sys.argv) == 3 else "--static"
-
-    if mode not in ("--static", "--animate"):
-        print("Error: mode must be --static or --animate")
-        sys.exit(1)
 
     try:
         parser = Parser()
         graph = parser.parse_file(filepath)
         visualizer = Visualizer(graph)
         simulation = Simulation(graph)
-        turn_log = simulation.run()
+        turn_log = simulation.starter()
 
         for i, line in enumerate(turn_log, start=1):
             visualizer.print_turn(i, line)
 
         visualizer.print_summary(len(turn_log), graph.nb_drones)
-
-
 
     except (FileNotFoundError, SyntaxError, ValueError,
             Simfail) as e:

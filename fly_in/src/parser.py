@@ -1,3 +1,4 @@
+from typing import NoReturn
 from src.obj import Zone, ZoneType, Connection, Drone
 from src.obj import Graph
 
@@ -10,15 +11,17 @@ class Map:
     """
 
     def __init__(self, nb_drones: int = 0,
-                 cnncts: list[Connection] = None,
-                 zones: dict = None, drones: list[Drone] = None):
+                 cnncts: list[Connection] | None = None,
+                 zones: dict[str, Zone] | None = None,
+                 drones: list[Drone] | None = None) -> None:
         self.nb_drones: int = nb_drones
         self.cnncts: list[Connection] = cnncts if cnncts is not None else [
         ]
-        self.zones: dict = zones if zones is not None else {}
+        self.zones: dict[str, Zone] = zones if zones is not None else {}
         self.drones: list[Drone] = drones if drones is not None else []
 
-    def add_connection(self, link: Connection):
+    def add_connection(self, link: Connection) -> None:
+        """Add a connection to this map."""
         self.cnncts.append(link)
 
 
@@ -30,7 +33,8 @@ class Parser:
     def __init__(self) -> None:
         self.current_line = 0
 
-    def error(self, msg: str) -> None:
+    def error(self, msg: str) -> NoReturn:
+        """Raise a parsing error with the current line number attached."""
         raise ValueError(f"{msg} on line {self.current_line} \u274c")
 
     # -----------------------------------

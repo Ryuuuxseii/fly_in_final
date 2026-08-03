@@ -1,5 +1,5 @@
 from colorama import Fore, Style, init
-from src.obj import Graph, ZoneType
+from src.obj import Graph
 
 init(autoreset=True)
 
@@ -27,13 +27,6 @@ ZONE_COLORS: dict[str, str] = {
     "crimson": "\033[38;5;160m",
     "rainbow": "\033[38;5;201m",
     "none": "\033[37m",
-}
-
-ZONE_TYPE_COLORS: dict[ZoneType, str] = {
-    ZoneType.NORMAL: "skyblue",
-    ZoneType.PRIORITY: "blue",
-    ZoneType.RESTRICTED: "red",
-    ZoneType.BLOCKED: "gray",
 }
 
 

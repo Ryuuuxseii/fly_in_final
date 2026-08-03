@@ -32,10 +32,6 @@ run: $(VENV)/bin/python3
 	@echo ">>> Running Fly-in simulation..."
 	PYTHONPATH=. $(VENV)/bin/python3 $(MAIN) $(MAP)
 
-animate: $(VENV)/bin/python3
-	@echo ">>> Running Fly-in simulation with animation..."
-	PYTHONPATH=. $(VENV)/bin/python3 $(MAIN) $(MAP) --animate
- 
 debug: $(VENV)/bin/python3
 	@echo ">>> Running Fly-in simulation in debug mode..."
 	PYTHONPATH=. $(VENV)/bin/python3 -m pdb $(MAIN) $(MAP)
@@ -67,4 +63,4 @@ lint-strict: $(VENV)/bin/python3
 	$(MYPY) . --strict
 
 
-.PHONY: all install run animate debug clean fclean lint lint-strict help
+.PHONY: all install run debug clean fclean lint lint-strict help
