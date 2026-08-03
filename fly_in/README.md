@@ -27,7 +27,7 @@ make install
 
 ## Expected Map Format Example
 
-```bash
+```
 nb_drones: 2
 start_hub: launchpad 0 0 [color=green]
 end_hub: helipad 3 0 [color=yellow]

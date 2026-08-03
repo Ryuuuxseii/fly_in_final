@@ -1,8 +1,5 @@
-import pygame
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 from colorama import Fore, Style, init
-from src.obj import Graph, ZoneType, Drone
+from src.obj import Graph, ZoneType
 
 init(autoreset=True)
 

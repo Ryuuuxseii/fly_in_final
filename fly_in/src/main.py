@@ -30,10 +30,7 @@ def main() -> None:
 
         visualizer.print_summary(len(turn_log), graph.nb_drones)
 
-        if mode == "--static":
-            visualizer.draw_graph(filepath)
-        else:
-            visualizer.animate(simulation.drones, turn_log, filepath)
+
 
     except (FileNotFoundError, SyntaxError, ValueError,
             Simfail) as e:
