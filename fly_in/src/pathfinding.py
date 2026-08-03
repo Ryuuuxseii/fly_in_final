@@ -2,12 +2,17 @@ from src.obj import Zone, ZoneType, Graph
 
 
 class Pathfinder:
-    """Finds shortest paths in a Graph using Dijkstra's algorithm."""
+
+    """
+    Finds shortest paths in a Graph using Dijkstra's algorithm.
+    """
 
     def __init__(self, graph: Graph) -> None:
         self.graph = graph
 
-    def _weight_of_path(self, zone: Zone, penalties: dict[str, float]) -> float:
+    # -+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+    def _weight_of_path(self, zone: Zone,
+                        penalties: dict[str, float]) -> float:
         """
         Returns the cost of entering a zone plus whatever penalty
         has accumulated on that zone from previous path computations.
@@ -23,25 +28,29 @@ class Pathfinder:
         }
         return weights[zone.zone_type] + penalties.get(zone.name, 0.0)
 
-    def path_finder_djikstra(
-        self, start: Zone, end: Zone, penalties: dict[str, float]
-    ) -> list[Zone]:
-        """
-        Find the shortest path from start to end using Dijkstra with penalties.
-        """
+    # -+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+    def path_finder_djikstra(self, start: Zone, end: Zone,
+                             penalties: dict[str, float]) -> list[Zone]:
+
+        """Find the shortest path from start to end using Dijkstra (
+            with penalties!!) """
 
         distances: dict[str, float] = {
-            zone.name: float("inf") for zone in self.graph.zones
-        }
-        previous: dict[str, Zone | None] = {
-            zone.name: None for zone in self.graph.zones
-        }
-        distances[start.name] = 0.0
-        unvisited: list[Zone] = [
-            z for z in self.graph.zones
-            if z.zone_type != ZoneType.BLOCKED
-        ]
+                zone.name: float("inf") for zone in self.graph.zones
+                }
 
+        previous: dict[str, Zone | None] = {
+                zone.name: None for zone in self.graph.zones
+                }
+
+        distances[start.name] = 0.0
+
+        unvisited: list[Zone] = [
+                z for z in self.graph.zones
+                if z.zone_type != ZoneType.BLOCKED
+                ]
+
+        # ----------------------------------
         def sort_key(zone: Zone) -> tuple[float, int]:
             tiebreaker = 0 if zone.zone_type == ZoneType.PRIORITY else 1
             return (distances[zone.name], tiebreaker)
@@ -73,12 +82,9 @@ class Pathfinder:
 
         return self._path_reconstruct(start, end, previous)
 
-    def _path_reconstruct(
-        self,
-        start: Zone,
-        end: Zone,
-        previous: dict[str, Zone | None]
-    ) -> list[Zone]:
+    # -+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+    def _path_reconstruct(self, start: Zone, end: Zone,
+                          previous: dict[str, Zone | None]) -> list[Zone]:
         """Reconstruct the path from start to end using the previous map."""
         path: list[Zone] = []
         current: Zone | None = end
@@ -94,21 +100,23 @@ class Pathfinder:
 
         return path
 
-    def path_finder_djikstra_djikstra_pen(
-        self, start: Zone, end: Zone, max_paths: int = 10
-    ) -> list[list[Zone]]:
+    # -+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+    def pathfinder_dj_pen(self, start: Zone, end: Zone, max_paths: int = 10
+                          ) -> list[list[Zone]]:
         """
-        Find up to max_paths diverse paths using Iterative
-        Dijkstra with Penalties.
+        Find up to max_paths diverse paths using iterative
+        Dijkstra with penalties. a penalty of 1.5 is added to all zones
+        within already used paths.
+        Returns a list of distinct paths tailored to avoid bottlenecks!
+        """
 
-        Returns a list of high-quality distinct paths tailored
-        to avoid bottlenecks.
-        """
         all_paths: list[list[Zone]] = []
-        penalties: dict[str, float] = {
-            zone.name: 0.0 for zone in self.graph.zones
-        }
 
+        penalties: dict[str, float] = {
+                            zone.name: 0.0 for zone in self.graph.zones
+                         }
+
+    # -+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
         for _ in range(max_paths):
             path = self.path_finder_djikstra(start, end, penalties)
             if not path:
