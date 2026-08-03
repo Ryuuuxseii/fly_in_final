@@ -7,7 +7,7 @@ class Pathfinder:
     def __init__(self, graph: Graph) -> None:
         self.graph = graph
 
-    def _path_weight(self, zone: Zone, penalties: dict[str, float]) -> float:
+    def _weight_of_path(self, zone: Zone, penalties: dict[str, float]) -> float:
         """
         Returns the cost of entering a zone plus whatever penalty
         has accumulated on that zone from previous path computations.
@@ -23,7 +23,7 @@ class Pathfinder:
         }
         return weights[zone.zone_type] + penalties.get(zone.name, 0.0)
 
-    def find_path(
+    def path_finder_djikstra(
         self, start: Zone, end: Zone, penalties: dict[str, float]
     ) -> list[Zone]:
         """
@@ -58,22 +58,22 @@ class Pathfinder:
             unvisited.remove(current)
 
             for neighbor in self.graph.get_neighbors(current):
-                cost = self._path_weight(neighbor, penalties)
-                new_dist = distances[current.name] + cost
+                cost = self._weight_of_path(neighbor, penalties)
+                new_distance = distances[current.name] + cost
 
-                if new_dist < distances[neighbor.name]:
-                    distances[neighbor.name] = new_dist
+                if new_distance < distances[neighbor.name]:
+                    distances[neighbor.name] = new_distance
                     previous[neighbor.name] = current
 
                 elif (
-                    new_dist == distances[neighbor.name]
+                    new_distance == distances[neighbor.name]
                     and neighbor.zone_type == ZoneType.PRIORITY
                 ):
                     previous[neighbor.name] = current
 
-        return self._reconstruct_path(start, end, previous)
+        return self._path_reconstruct(start, end, previous)
 
-    def _reconstruct_path(
+    def _path_reconstruct(
         self,
         start: Zone,
         end: Zone,
@@ -94,7 +94,7 @@ class Pathfinder:
 
         return path
 
-    def find_all_paths_dijkstra_penalty(
+    def path_finder_djikstra_djikstra_pen(
         self, start: Zone, end: Zone, max_paths: int = 10
     ) -> list[list[Zone]]:
         """
@@ -110,7 +110,7 @@ class Pathfinder:
         }
 
         for _ in range(max_paths):
-            path = self.find_path(start, end, penalties)
+            path = self.path_finder_djikstra(start, end, penalties)
             if not path:
                 break
             all_paths.append(path)

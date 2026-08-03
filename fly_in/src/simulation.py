@@ -40,7 +40,8 @@ class Simulation:
             self.drones.append(drone)
 
     def starter(self) -> list[str]:
-        """starter the simulation and return the turn log with deadlock safety."""
+        """starter the simulation and return the turn log with
+            deadlock safety."""
         MAX_STALL_TURNS = 20
         stall_turns = 0
 
