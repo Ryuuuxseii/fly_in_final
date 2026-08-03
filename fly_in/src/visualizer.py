@@ -31,6 +31,7 @@ ZONE_COLORS: dict[str, str] = {
 
 
 class Visualizer:
+
     """Handles visual representation of the simulation."""
 
     def __init__(self, graph: Graph) -> None:
@@ -61,6 +62,7 @@ class Visualizer:
         print(" ".join(colored_parts))
 
     def print_summary(self, total_turns: int, total_drones: int) -> None:
+
         """Print a summary of the simulation results."""
         print(
             f"\n{Fore.GREEN}Simulation complete! All drones arrived "

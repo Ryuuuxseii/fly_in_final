@@ -10,6 +10,7 @@ class Simfail(Exception):
 
 
 class Simulation:
+
     """Manages the drone routing simulation turn by turn and in sync"""
 
     def __init__(self, graph: Graph) -> None:
@@ -19,7 +20,9 @@ class Simulation:
         self.drones: list[Drone] = []
         self._init_drones()
 
+    # -+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
     def _init_drones(self) -> None:
+
         """Create all drones and assign them paths using multiple routes."""
         if self.graph.start is None or self.graph.end is None:
             raise ValueError("Graph must have a start and end zone ❌")
@@ -39,7 +42,9 @@ class Simulation:
             drone.path = list(chosen_path[1:])
             self.drones.append(drone)
 
+    # -+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
     def starter(self) -> list[str]:
+
         """Run the simulation and return the turn log, with
             deadlock safety."""
         MAX_STALL_TURNS = 20
@@ -60,11 +65,15 @@ class Simulation:
 
         return self.turn_log
 
+    # -+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
     def _check_all_delivered(self) -> bool:
+
         """Check if all drones have been delivered."""
         return all(drone.delivered for drone in self.drones)
 
+    # -+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
     def _turn_start(self) -> bool:
+
         """Execute one simulation turn synchronously."""
         conn_usage: dict[str, int] = {}
         drones_acted: set[Drone] = set()
@@ -161,13 +170,16 @@ class Simulation:
 
         return len(moves) > 0
 
+    # -+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
     def _conn_key(self, zone_a: Zone, zone_b: Zone) -> str:
+
         """Return a canonical key for a connection (order-independent)."""
 
         names = sorted([zone_a.name, zone_b.name])
 
         return f"{names[0]}-{names[1]}"
 
+    # -+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
     def _can_move(self,
                   drone: Drone,
                   next_zone: Zone,
